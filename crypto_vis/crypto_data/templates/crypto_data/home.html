@@ -6,11 +6,35 @@
         #priceChart {
             max-width: 800px;
             height: 400px;
+            margin: 20px auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        @media (max-width: 600px) {
+            #priceChart { max-width: 100%; height: 300px; }
+            h1 { font-size: 1.5em; }
+            h2 { font-size: 1.2em; }
+            ul { font-size: 0.9em; }
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to Crypto Visualizer</h1>
+    <h1>Crypto Visualizer</h1>
     <h2>Top 100 Cryptocurrencies</h2>
     <ul>
     {% for coin in crypto_data %}
@@ -18,104 +42,53 @@
     {% endfor %}
     </ul>
     <h2>Top 10 Price Comparison Chart</h2>
-    <div>
-        <canvas id="priceChart"></canvas>
-    </div>
-    <p>More features coming soon!</p>
+    <div><canvas id="priceChart"></canvas></div>
 
-    <!-- Load Chart.js first -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <!-- Render data as JSON using json_script -->
     {{ chart_labels|json_script:"chartLabels" }}
     {{ chart_data|json_script:"chartData" }}
-    <!-- Custom script -->
     <script>
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    if (ctx) {
-        const labels = JSON.parse(document.getElementById('chartLabels').textContent);
-        const data = JSON.parse(document.getElementById('chartData').textContent);
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Current Price (USD)',
-                    data: data,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.6)',
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(75, 192, 192, 0.6)',
-                        'rgba(153, 102, 255, 0.6)',
-                        'rgba(255, 159, 64, 0.6)',
-                        'rgba(199, 199, 199, 0.6)',
-                        'rgba(83, 102, 255, 0.6)',
-                        'rgba(100, 149, 237, 0.6)',
-                        'rgba(144, 238, 144, 0.6)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)',
-                        'rgba(199, 199, 199, 1)',
-                        'rgba(83, 102, 255, 1)',
-                        'rgba(100, 149, 237, 1)',
-                        'rgba(144, 238, 144, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        type: 'logarithmic',
-                        ticks: {
-                            callback: function(value, index, values) {
-                                return '$' + value;
-                            }
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                size: 12
-                            }
-                        }
-                    }
+        console.log("Script started");
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        if (ctx) {
+            console.log("Canvas found");
+            const labels = JSON.parse(document.getElementById('chartLabels').textContent);
+            const data = JSON.parse(document.getElementById('chartData').textContent);
+            console.log("Parsed data:", { labels, data });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Current Price (USD)',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)',
+                            'rgba(199, 199, 199, 0.6)', 'rgba(83, 102, 255, 0.6)', 'rgba(100, 149, 237, 0.6)',
+                            'rgba(144, 238, 144, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)', 'rgba(100, 149, 237, 1)',
+                            'rgba(144, 238, 144, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
                 },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': $' + context.raw;
-                            }
-                        }
-                    },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: (value) => '$' + value,
-                        font: {
-                            weight: 'bold'
-                        },
-                        color: 'black'
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    } else {
-        console.log('Canvas element not found');
-    }
+                options: {
+                    scales: { y: { beginAtZero: true, type: 'logarithmic', ticks: { callback: value => '$' + value } } },
+                    plugins: { datalabels: { anchor: 'end', align: 'top', formatter: value => '$' + value, font: { weight: 'bold' }, color: 'black' } }
+                },
+                plugins: [ChartDataLabels]
+            });
+            console.log("Chart initialized");
+        } else {
+            console.log("Canvas not found");
+        }
     </script>
 </body>
 </html>
