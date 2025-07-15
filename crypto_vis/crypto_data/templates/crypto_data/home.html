@@ -2,20 +2,21 @@
 {% block content %}
     <h1>Crypto Visualizer</h1>
 
-    <h2>Top 100 Cryptocurrencies</h2>
-    <ul>
+    <h2>Top 10 Cryptocurrencies</h2>
+    <div id="loading" style="text-align: center; font-size: 1.5em; color: #666;">Loading data...</div>
+    <ul id="cryptoList" style="display: none;">
         {% for coin in crypto_data %}
             <li>{{ coin.name }}: ${{ coin.current_price }}</li>
         {% endfor %}
     </ul>
 
     <h2>Top 10 Price Comparison Chart</h2>
-    <div class="chart-container">
+    <div class="chart-container" style="display: none;" id="barChartContainer">
         <canvas id="priceBarChart"></canvas>
     </div>
 
-    <h2>7-Day Price Trend</h2>
-    <div class="chart-container">
+    <h2>Top 5 7-Day Price Trend</h2>
+    <div class="chart-container" style="display: none;" id="trendChartContainer">
         <canvas id="priceTrendChart"></canvas>
     </div>
 
@@ -24,9 +25,15 @@
     {{ bar_data|json_script:"barData" }}
     {{ historical_data|json_script:"historicalData" }}
     {{ dates|json_script:"dates" }}
-    {{ top_10_ids|json_script:"top10Ids" }}
+    {{ top_5_ids|json_script:"top5Ids" }}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Show content after load
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('cryptoList').style.display = 'block';
+            document.getElementById('barChartContainer').style.display = 'block';
+            document.getElementById('trendChartContainer').style.display = 'block';
+
             // Bar Chart
             const barCtx = document.getElementById('priceBarChart').getContext('2d');
             const barLabels = JSON.parse(document.getElementById('barLabels').textContent);
@@ -55,31 +62,30 @@
                             type: 'logarithmic',
                             title: { display: true, text: 'Price (USD)', font: { size: 14 } },
                             ticks: { callback: value => `$${value.toLocaleString()}` },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            min: 0.1
                         },
                         x: { title: { display: true, text: 'Cryptocurrency', font: { size: 14 } } }
                     },
                     plugins: {
                         legend: { position: 'top' },
-                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` } },
-                        datalabels: { display: false }
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` } }
                     }
                 }
             });
 
-            // 7-Day Price Trend Chart
+            // Line Chart
             const trendCtx = document.getElementById('priceTrendChart').getContext('2d');
             const historicalData = JSON.parse(document.getElementById('historicalData').textContent);
             const dates = JSON.parse(document.getElementById('dates').textContent);
-            const top10Ids = JSON.parse(document.getElementById('top10Ids').textContent);
+            const top5Ids = JSON.parse(document.getElementById('top5Ids').textContent);
 
             const colors = [
                 'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)',
-                'rgba(255, 99, 255, 1)', 'rgba(99, 255, 132, 1)'
+                'rgba(153, 102, 255, 1)'
             ];
 
-            const datasets = top10Ids.map((id, index) => {
+            const datasets = top5Ids.map((id, index) => {
                 const isBitcoin = id === 'bitcoin';
                 return {
                     label: id.charAt(0).toUpperCase() + id.slice(1),
@@ -107,6 +113,7 @@
                             title: { display: true, text: 'Price (USD) - Others', font: { size: 14 } },
                             ticks: { callback: value => `$${value.toLocaleString()}` },
                             grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            min: 0,
                             max: Math.max(...datasets.filter(ds => ds.yAxisID === 'y-left').flatMap(ds => ds.data)) * 1.1
                         },
                         'y-right': {
