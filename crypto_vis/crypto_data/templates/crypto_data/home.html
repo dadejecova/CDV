@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto Visualizer</title>
+</head>
+<body>
+    <h1>Welcome to Crypto Visualizer</h1>
+    <h2>Top 100 Crypto Currencies</h2>
+    <ul>
+        {% for coin in crypto_data %}
+        <li>{{ coin.name }}: ${{ coin.current_price }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Comparison Chart</h2>
+    <div id="priceChart"></div>
+    <p>More features coming soon!</p>
+    <script>
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Current Price $',
+                    data: {{ chart_data|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
