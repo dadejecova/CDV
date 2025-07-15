@@ -12,7 +12,7 @@
             margin: 0 15px;
             text-decoration: none;
         }
-        #priceChart, #historicalChart {
+        #priceChart {
             max-width: 800px;
             height: 400px;
             margin: 20px auto;
@@ -35,7 +35,7 @@
             margin: 5px 0;
         }
         @media (max-width: 600px) {
-            #priceChart, #historicalChart {
+            #priceChart {
                 max-width: 100%;
                 height: 300px;
             }
@@ -43,6 +43,9 @@
             h2 { font-size: 1.2em; }
             ul { font-size: 0.9em; }
         }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .chart-container { width: 80%; margin: 0 auto 40px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #333; }
     </style>
 </head>
 <body>
