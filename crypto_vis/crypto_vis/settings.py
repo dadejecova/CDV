@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crypto_data',  # Custom app for handling crypto data
+    'django.contrib.humanize', # For humanizing data (e.g., time since)
 ]
 
 MIDDLEWARE = [

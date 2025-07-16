@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from pycoingecko import CoinGeckoAPI
 from datetime import datetime, timedelta
@@ -75,10 +76,11 @@ def home(request):
             
 
     context = {
-        'bar_labels': bar_labels,
-        'bar_prices': bar_prices,
-        'historical_data': historical_data,
-        'top_coins': top_coins,
-        'coin_colors': coin_colors,
+        'bar_labels_json': json.dumps([coin['name'] for coin in top_coins_sorted]),
+        'bar_prices_json': json.dumps([coin['current_price'] for coin in top_coins_sorted]),
+        'historical_data_json': json.dumps(historical_data),  # Already a dict with lists
+        'coin_colors_json': json.dumps(coin_colors),
+        'top_coins_json': json.dumps(top_coins),  # For JS access
+        'top_coins': top_coins,  # Keep for table (Python loop)
     }
-    return render(request, 'crypto_data/home.html', context)
+    return render(request, 'home.html', context)
