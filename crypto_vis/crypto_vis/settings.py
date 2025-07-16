@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ns+@gdu)$-j8pzqi$3kb1h*s!-3ef)#_ibqcb5(#ud(bydt*=e'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crypto_data',  # Custom app for handling crypto data
-    'django.contrib.humanize', # For humanizing data (e.g., time since)
+    'django.contrib.humanize',
+    'crypto_data', # Custom app for handling crypto data
 ]
 
 MIDDLEWARE = [
