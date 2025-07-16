@@ -1,137 +1,51 @@
 {% extends 'base.html' %}
+
 {% block content %}
-    <h1>Crypto Visualizer</h1>
-
-    <h2>Top 10 Cryptocurrencies</h2>
-    <div id="loading" style="text-align: center; font-size: 1.5em; color: #666;">Loading data...</div>
-    <ul id="cryptoList" style="display: none;">
-        {% for coin in crypto_data %}
-            <li>{{ coin.name }}: ${{ coin.current_price }}</li>
-        {% endfor %}
-    </ul>
-
     <h2>Top 10 Price Comparison Chart</h2>
-    <div class="chart-container" style="display: none;" id="barChartContainer">
-        <canvas id="priceBarChart"></canvas>
+    <div style="width: 80%; margin: auto;">  <!-- Responsive width -->
+        <canvas id="barChart"></canvas>
     </div>
 
-    <h2>Top 5 7-Day Price Trend</h2>
-    <div class="chart-container" style="display: none;" id="trendChartContainer">
-        <canvas id="priceTrendChart"></canvas>
+    <h2>Top 5 7-Day Price Trend (Percentage Change)</h2>
+    <div style="width: 80%; margin: auto;">
+        <canvas id="lineChart"></canvas>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    {{ bar_labels|json_script:"barLabels" }}
-    {{ bar_data|json_script:"barData" }}
-    {{ historical_data|json_script:"historicalData" }}
-    {{ dates|json_script:"dates" }}
-    {{ top_5_ids|json_script:"top5Ids" }}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Show content after load
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('cryptoList').style.display = 'block';
-            document.getElementById('barChartContainer').style.display = 'block';
-            document.getElementById('trendChartContainer').style.display = 'block';
+    <h2>Top 10 Cryptocurrencies Data</h2>
+    <div class="table-responsive">  <!-- Bootstrap for mobile scrolling -->
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Symbol</th>
+                    <th>Current Price (USD)</th>
+                    <th>Market Cap (USD)</th>
+                    <th>24h Change (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for coin in top_coins %}
+                    <tr>
+                        <td>{{ coin.name }}</td>
+                        <td>{{ coin.symbol | upper }}</td>
+                        <td>${{ coin.current_price | floatformat:2 }}</td>
+                        <td>${{ coin.market_cap | intcomma }}</td>
+                        <td {% if coin.price_change_percentage_24h < 0 %}class="text-danger"{% else %}class="text-success"{% endif %}>
+                            {{ coin.price_change_percentage_24h | floatformat:2 }}%
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-            // Bar Chart
-            const barCtx = document.getElementById('priceBarChart').getContext('2d');
-            const barLabels = JSON.parse(document.getElementById('barLabels').textContent);
-            const barData = JSON.parse(document.getElementById('barData').textContent);
+    <!-- Loading indicator (as before) -->
+    <div id="loading" style="display: none;">Loading...</div>
+    {{ bar_labels|json_script:"bar-labels" }}
+    {{ bar_prices|json_script:"bar-prices" }}
+    {{ historical_data|json_script:"historical-data" }}
+    {{ coin_colors|json_script:"coin-colors" }}
+    {{ top_coins|json_script:"top-coins" }}
 
-            new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: barLabels,
-                    datasets: [{
-                        label: 'Current Price (USD)',
-                        data: barData,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)',
-                            'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)', 'rgba(199, 199, 199, 0.7)', 'rgba(83, 102, 255, 0.7)',
-                            'rgba(255, 99, 255, 0.7)', 'rgba(99, 255, 132, 0.7)'
-                        ],
-                        borderColor: 'rgba(0, 0, 0, 0.8)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            type: 'logarithmic',
-                            title: { display: true, text: 'Price (USD)', font: { size: 14 } },
-                            ticks: { callback: value => `$${value.toLocaleString()}` },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                            min: 0.1
-                        },
-                        x: { title: { display: true, text: 'Cryptocurrency', font: { size: 14 } } }
-                    },
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` } }
-                    }
-                }
-            });
-
-            // Line Chart
-            const trendCtx = document.getElementById('priceTrendChart').getContext('2d');
-            const historicalData = JSON.parse(document.getElementById('historicalData').textContent);
-            const dates = JSON.parse(document.getElementById('dates').textContent);
-            const top5Ids = JSON.parse(document.getElementById('top5Ids').textContent);
-
-            const colors = [
-                'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)'
-            ];
-
-            const datasets = top5Ids.map((id, index) => {
-                const isBitcoin = id === 'bitcoin';
-                return {
-                    label: id.charAt(0).toUpperCase() + id.slice(1),
-                    data: historicalData[id],
-                    borderColor: colors[index % colors.length],
-                    yAxisID: isBitcoin ? 'y-right' : 'y-left',
-                    borderWidth: 2,
-                    fill: false
-                };
-            });
-
-            new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: { title: { display: true, text: 'Date', font: { size: 14 } } },
-                        'y-left': {
-                            type: 'linear',
-                            position: 'left',
-                            title: { display: true, text: 'Price (USD) - Others', font: { size: 14 } },
-                            ticks: { callback: value => `$${value.toLocaleString()}` },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                            min: 0,
-                            max: Math.max(...datasets.filter(ds => ds.yAxisID === 'y-left').flatMap(ds => ds.data)) * 1.1
-                        },
-                        'y-right': {
-                            type: 'linear',
-                            position: 'right',
-                            title: { display: true, text: 'Price (USD) - Bitcoin', font: { size: 14 } },
-                            ticks: { callback: value => `$${value.toLocaleString()}` },
-                            grid: { drawOnChartArea: false },
-                            min: Math.min(...datasets.find(ds => ds.label === 'Bitcoin').data) * 0.9,
-                            max: Math.max(...datasets.find(ds => ds.label === 'Bitcoin').data) * 1.1
-                        }
-                    },
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` } }
-                    }
-                }
-            });
-        });
-    </script>
+<script> // Parse passed data using json_script const barLabels = JSON.parse(document.getElementById('bar-labels').textContent); const barPrices = JSON.parse(document.getElementById('bar-prices').textContent); const historicalData = JSON.parse(document.getElementById('historical-data').textContent); const coinColors = JSON.parse(document.getElementById('coin-colors').textContent); const topCoins = JSON.parse(document.getElementById('top-coins').textContent); // Function to get color by coin ID (fallback to random) function getColor(coinId) { return coinColors[coinId] || '#' + Math.floor(Math.random()*16777215).toString(16); } // Bar Chart (sorted, log scale as before, with colors) new Chart(document.getElementById('barChart'), { type: 'bar', data: { labels: barLabels, datasets: [{ label: 'Current Price (USD)', data: barPrices, backgroundColor: barLabels.map(label => getColor(topCoins.find(c => c.name === label).id)), // Map to IDs }] }, options: { scales: { y: { type: 'logarithmic', beginAtZero: false } }, plugins: { legend: { display: true } }, responsive: true, // Chart.js responsive } }); // Line Chart (percentage, single axis, consistent colors) const dates = historicalData.dates || []; new Chart(document.getElementById('lineChart'), { type: 'line', data: { labels: dates, datasets: Object.keys(historicalData).filter(k => k !== 'dates').map(coinId => ({ label: topCoins.find(c => c.id === coinId).name, data: historicalData[coinId], borderColor: getColor(coinId), fill: false, })) }, options: { scales: { y: { title: { display: true, text: 'Indexed Price (%)' } } }, plugins: { legend: { display: true } }, responsive: true, } }); </script>
 {% endblock %}
