@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'crypto_data/css/styles.css' %}">  <!-- Reuse your styles -->
+
+    <h2>Your Portfolio (Demo Mode)</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Holding</button>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Coin</th>
+                    <th>Amount</th>
+                    <th>Purchase Price</th>
+                    <th>Current Value (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holding in holdings %}
+                    <tr>
+                        <td>{{ holding.coin_id|capfirst }}</td>
+                        <td>{{ holding.amount }}</td>
+                        <td>${{ holding.purchase_price|floatformat:2|default:'N/A' }}</td>
+                        <td>${{ holding.current_value|floatformat:2|default:'N/A' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p>Total Value: ${{ total_value|floatformat:2|default:'0.00' }}</p>
+
+    <a href="{% url 'home' %}">Back to Home</a>  <!-- Link back to homepage -->
+{% endblock %}

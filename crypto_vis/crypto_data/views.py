@@ -1,6 +1,8 @@
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from pycoingecko import CoinGeckoAPI
+from .forms import PortfolioForm
+from .models import Portfolio
 from datetime import datetime, timedelta
 import concurrent.futures
 from django.core.cache import cache # Dunno if are going to continue using this
@@ -89,3 +91,30 @@ def home(request):
         'top_coins': top_coins,
     }
     return render(request, 'home.html', context)
+
+def portfolio(request):
+    if request.method == 'POST':
+        form = PortfolioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('portfolio')
+    else:
+        form = PortfolioForm()
+
+    # Fetch all holdings (global for now) and calculate values
+    holdings = Portfolio.objects.all()
+    total_value = 0
+    for holding in holdings:
+        try:
+            price = cg.get_price(ids=holding.coin_id, vs_currencies='usd')[holding.coin_id]['usd']
+            holding.current_value = holding.amount * price
+            total_value += holding.current_value
+        except:
+            holding.current_value = 'N/A'  # If API fails for a coin
+
+    context = {
+        'form': form,
+        'holdings': holdings,
+        'total_value': total_value,
+    }
+    return render(request, 'portfolio.html', context)
