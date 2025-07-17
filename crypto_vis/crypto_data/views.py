@@ -1,5 +1,6 @@
 import json
-from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, render, redirect
 from pycoingecko import CoinGeckoAPI
 from .forms import PortfolioForm
 from .models import Portfolio
@@ -97,6 +98,7 @@ def portfolio(request):
         form = PortfolioForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Portfolio updated successfully!')
             return redirect('portfolio')
     else:
         form = PortfolioForm()
@@ -109,12 +111,18 @@ def portfolio(request):
             price = cg.get_price(ids=holding.coin_id, vs_currencies='usd')[holding.coin_id]['usd']
             holding.current_value = holding.amount * price
             total_value += holding.current_value
-        except:
-            holding.current_value = 'N/A'  # If API fails for a coin
-
+        except Exception as e:
+            holding.current_value = 'N/A'
+            print(f"API error for {holding.coin_id}: {e}")  # For debugging
     context = {
         'form': form,
         'holdings': holdings,
         'total_value': total_value,
     }
     return render(request, 'portfolio.html', context)
+
+def delete_holding(request, pk):
+    holding = get_object_or_404(Portfolio, pk=pk)
+    holding.delete()
+    messages.success(request, 'Holding deleted!')
+    return redirect('portfolio')

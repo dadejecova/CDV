@@ -8,3 +8,8 @@ class Portfolio(models.Model):
 
     def __str__(self):
         return f"{self.coin_id} holding: {self.amount}"
+    
+    def gain_loss(self):
+        if self.purchase_price and hasattr(self, 'current_value') and self.current_value != 'N/A':
+            return self.current_value - (self.amount * self.purchase_price)
+        return None
